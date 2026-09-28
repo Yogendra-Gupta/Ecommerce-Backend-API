@@ -1,86 +1,457 @@
-# Ecommerce-Backend-API
+# 🛒 Ecommerce-FastAPI
 
-The project is a small FastAPI-based E-commerce Product Management API that demonstrates REST API development, request validation using Pydantic, dependency injection, CRUD operations, filtering, sorting, pagination, and JSON-based data persistence.
+A lightweight **RESTful E-commerce Product Management API** built with **Python, FastAPI, and Pydantic v2**.
 
----
+The project demonstrates **CRUD operations, request validation, dependency injection, business-rule validation, search, filtering, sorting, pagination, nested Pydantic models, and JSON-based persistence**.
 
-## Project Objective
-The project implements a RESTful backend API for managing products in an e-commerce application.
+## 🚀 Project Overview
 
-Instead of using a database, product information is stored inside a JSON file.
+Ecommerce-FastAPI provides a backend API for managing products in an e-commerce application.
 
-The application demonstrates:
-- REST API development
-- CRUD operations
-- Validation
-- Dependency Injection
-- Business Rule Validation
-- Pagination
-- Filtering
-- Sorting
-- Nested Data Models
----
+### Core capabilities
 
-## Technical Skills Demonstrated
-- Python
-- FastAPI
-- REST APIs
-- Pydantic
-- CRUD Operations
-- Dependency Injection
-- JSON Data Management
-- API Validation
-- OpenAPI/Swagger
-- Uvicorn
-- Modular Architecture
+- Create, read, update, and delete products
+- Search and filter products
+- Sort products by price
+- Pagination with limit/offset
+- UUID-based product identification
+- Pydantic v2 validation
+- Nested Seller and Dimensions models
+- Custom business-rule validation
+- Computed product values
+- FastAPI Dependency Injection
+- Structured HTTP exception handling
+- Automatic Swagger/OpenAPI documentation
+- Environment-variable configuration
+
+Product data is stored in `products.json` rather than a relational database, keeping the project lightweight and easy to understand.
 
 ---
 
-## Project Folder Structure
+## 🏗️ Architecture
 
+The application follows a simple layered architecture:
+
+```text
+                    ┌─────────────────┐
+                    │      Client     │
+                    └────────┬────────┘
+                             │ HTTP
+                             ▼
+                    ┌─────────────────┐
+                    │   FastAPI API   │
+                    │    main.py      │
+                    └────────┬────────┘
+                             │
+                             │ Dependency Injection
+                             ▼
+                    ┌─────────────────┐
+                    │  Service Layer  │
+                    │ products.py     │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │  products.json  │
+                    │   Data Layer    │
+                    └─────────────────┘
+
+              Pydantic Schema / Validation
+                       ▲
+                       │
+                Request / Response
 ```
-ecommerce-backend-api/
+
+### Layers
+
+| Layer | Responsibility |
+|---|---|
+| API Layer | HTTP routes, requests, responses, exceptions |
+| Validation Layer | Pydantic schemas and business rules |
+| Service Layer | Product CRUD and data operations |
+| Data Layer | JSON-based persistence |
+
+---
+
+## 📁 Project Structure
+
+```text
+fastapi-ecommerce/
 │
 ├── app/
-│   │
 │   ├── main.py
-│   │
 │   ├── schema/
-│   │      product.py
-│   │
+│   │   └── product.py
 │   ├── service/
-│   │      products.py
-│   │
-│   ├── data/
-│          products.json
-
+│   │   └── products.py
+│   └── data/
+│       └── products.json
+└── README.md
 ```
+
+### Module responsibilities
+
+- **`app/main.py`** — FastAPI application, routes, request/response handling, dependency injection, exceptions.
+- **`app/schema/product.py`** — Pydantic models, nested schemas, validation, computed fields, business rules.
+- **`app/service/products.py`** — JSON loading/saving and product CRUD operations.
+- **`app/data/products.json`** — Product persistence.
+
 ---
 
-## Module Explanation
+## 🔌 API Endpoints
 
-This file acts as the API Controller.
+### `GET /`
 
-Responsibilities include:
+Returns basic application information.
 
-- Creating FastAPI app
-- Defining routes
-- Receiving requests
-- Returning responses
-- Calling service functions
-- Exception handling
+### `GET /products`
+
+Returns products with search, sorting, and pagination.
+
+Examples:
+
+```http
+GET /products
+GET /products?name=iphone
+GET /products?sort_by_price=true
+GET /products?limit=5
+GET /products?offset=10
+```
+
+### `GET /products/{id}`
+
+Retrieves a product using its UUID.
+
+Returns `404` if the product does not exist.
+
+### `POST /products`
+
+Creates a product.
+
+```text
+Request
+  ↓
+Pydantic Validation
+  ↓
+Generate UUID + created_at
+  ↓
+Check Duplicate SKU
+  ↓
+Save JSON
+  ↓
+Return Product
+```
+
+### `PUT /products/{id}`
+
+Updates a product and supports partial updates, including nested objects.
+
+### `DELETE /products/{id}`
+
+Deletes a product and persists the updated collection.
+
 ---
 
+## 🧩 Pydantic Models
 
-## Executive Summary
+The project uses nested models:
 
-- Developed a RESTful E-commerce Backend API using Python and FastAPI, implementing complete CRUD operations for product management.
-- Designed a modular backend architecture by separating API routes, business logic, validation schemas, and data access layers, improving code maintainability and scalability.
-- Implemented advanced Pydantic v2 models with nested schemas, custom validators, computed fields, and business rule validation to ensure robust data integrity.
-- Built REST endpoints supporting product creation, retrieval, update, deletion, search, filtering, sorting, and pagination for efficient product management.
-- Implemented UUID-based product identification and comprehensive request validation with structured error handling using FastAPI's exception mechanisms.
-- Applied Dependency Injection to create reusable and maintainable API components while reducing code duplication.
-- Managed product data using JSON-based persistence with efficient read/write operations, providing a lightweight backend suitable for rapid prototyping.
-- Developed self-documented APIs through FastAPI's automatic OpenAPI/Swagger documentation, enabling easy API testing and integration.
-- Structured the project following backend development best practices, including layered architecture, reusable services, and environment-based configuration.
+```text
+Product
+├── Seller
+└── Dimensions
+```
 
+### Product
+
+Includes fields such as:
+
+```text
+id, sku, name, description, category, brand,
+price, currency, discount, stock, rating,
+tags, images, seller, dimensions, created_at
+```
+
+### Seller
+
+```text
+id
+name
+email
+website
+```
+
+### Dimensions
+
+```text
+length
+width
+height
+```
+
+---
+
+## ✅ Validation & Business Rules
+
+The project demonstrates both field-level and model-level validation.
+
+| Field / Rule | Validation |
+|---|---|
+| SKU | Format such as `ABC-123` |
+| Price | `> 0` |
+| Rating | `0–5` |
+| Discount | `0–90%` |
+| Stock | `>= 0` |
+| Images | Valid URLs |
+| Seller email | `EmailStr` validation |
+| Seller website | URL + allowed-domain validation |
+
+Cross-field rules include:
+
+```text
+stock == 0
+    → is_active cannot be true
+```
+
+```text
+discount > 0
+    → rating cannot be zero
+```
+
+These rules are implemented using Pydantic model validators.
+
+---
+
+## 🧮 Computed Fields
+
+### Final Price
+
+```text
+final_price = price × (1 - discount / 100)
+```
+
+### Product Volume
+
+```text
+volume = length × width × height
+```
+
+These values are calculated from existing product data rather than requiring clients to submit them.
+
+---
+
+## 🔄 Request Lifecycle
+
+```text
+Client
+  ↓
+FastAPI Route
+  ↓
+Dependency Injection
+  ↓
+Pydantic Validation
+  ↓
+Service Layer
+  ↓
+products.json
+  ↓
+Response
+  ↓
+Client
+```
+
+---
+
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| **Python** | Backend language |
+| **FastAPI** | REST API framework |
+| **Pydantic v2** | Data validation and schemas |
+| **Uvicorn** | ASGI server |
+| **Swagger UI / OpenAPI** | API documentation |
+| **JSON** | Data persistence |
+| **python-dotenv** | Environment variables |
+
+---
+
+## ⚙️ Setup
+
+### 1. Clone
+
+```bash
+git clone <your-repository-url>
+cd fastapi-ecommerce
+```
+
+### 2. Create virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+> The project report notes that the supplied `requirements.txt` is currently empty, so it should be populated with the application's dependencies before relying on a clean-clone installation.
+
+### 4. Configure environment variables
+
+Create a `.env` file as required by the application.
+
+Do not commit credentials or environment-specific secrets to Git.
+
+### 5. Run the API
+
+```bash
+uvicorn app.main:app --reload
+```
+
+API:
+
+```text
+http://127.0.0.1:8000
+```
+
+Swagger:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+ReDoc:
+
+```text
+http://127.0.0.1:8000/redoc
+```
+
+---
+
+## ⚠️ Current Limitations
+
+The current implementation is intentionally lightweight. The project report identifies these limitations:
+
+- JSON file instead of PostgreSQL/MySQL
+- No authentication or authorization
+- No SQLAlchemy ORM
+- No Alembic migrations
+- No automated unit tests
+- No structured logging
+- No Redis caching
+- No Docker support
+- No API versioning
+- No repository pattern
+- No CI/CD pipeline
+- Limited configuration management
+
+### JSON Persistence
+
+Current flow:
+
+```text
+Read JSON
+   ↓
+Modify in memory
+   ↓
+Write JSON
+```
+
+This is simple for a learning project, but it does not provide the concurrency, transactions, and scalability expected from a production database-backed system.
+
+---
+
+## 🔮 Future Improvements
+
+The project can evolve toward a production-oriented e-commerce backend by adding:
+
+- PostgreSQL
+- SQLAlchemy
+- Alembic migrations
+- JWT authentication
+- Role-based authorization
+- Product categories
+- Shopping cart
+- Orders
+- Inventory management
+- Payment integration
+- Redis caching
+- Async database operations
+- Docker / Docker Compose
+- Pytest
+- GitHub Actions CI/CD
+- Structured logging
+- Cloud deployment
+- Monitoring and observability
+
+---
+
+## 🎯 What This Project Demonstrates
+
+```text
+Python
+  +
+FastAPI
+  +
+REST API Design
+  +
+CRUD
+  +
+Pydantic v2
+  +
+Nested Models
+  +
+Custom Validation
+  +
+Business Rules
+  +
+Dependency Injection
+  +
+Pagination
+  +
+Filtering
+  +
+Sorting
+  +
+Exception Handling
+  +
+OpenAPI / Swagger
+  +
+JSON Persistence
+```
+
+This project demonstrates practical **Python backend and FastAPI fundamentals** and provides a foundation that can be extended into a database-backed production-style e-commerce service.
+
+---
+
+## 💼 Resume Description
+
+**Ecommerce Backend API — FastAPI**
+
+- Developed a RESTful e-commerce product management API using **Python and FastAPI**, implementing CRUD operations, search, sorting, filtering, and pagination.
+- Designed a layered backend architecture separating **API routes, Pydantic validation schemas, business logic, and JSON data persistence**.
+- Implemented **Pydantic v2 nested models, custom validators, computed fields, UUID-based identification, and cross-field business rules** for robust product validation.
+- Applied **FastAPI Dependency Injection** and structured HTTP exception handling while exposing interactive **OpenAPI/Swagger documentation**.
+
+---
+
+## 👨‍💻 Author
+
+**Yogendra Gupta**
+
+Data Science | Python Backend Development
